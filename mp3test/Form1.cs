@@ -1,4 +1,5 @@
-﻿using System;
+﻿using AxWMPLib;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
@@ -18,16 +19,20 @@ namespace mp3test
         public Form1()
         {
             InitializeComponent();
+        }
+        /*{
+            InitializeComponent();
             //run a timer once every second
             _monitorTimer = new System.Timers.Timer(1000);
             _monitorTimer.Elapsed += (s, e) =>
             {
+                
                 //every tick of timer, check if media playing previously has ended
                 if (_prevState == 1)
                 {
                     axWindowsMediaPlayer1.Ctlcontrols.stop();
                     //set URL to next song in the queue or default next song
-                    axWindowsMediaPlayer1.URL = @"C:\Users\prave\Music\Playlist\BMK201-Sobillu-Jaganmohini.mp3";
+                    axWindowsMediaPlayer1.URL = @" ";
                     axWindowsMediaPlayer1.Ctlcontrols.play();
                     _prevState = 0;
                 }
@@ -40,15 +45,18 @@ namespace mp3test
                     _prevState = 1;
                 }
             };
-            axWindowsMediaPlayer1.URL = @"C:\Users\prave\Music\Playlist\BMK206-Bangarumurali-Neelambari.mp3";
-        }
-        string[] files, paths, paths2, files2;
+            axWindowsMediaPlayer1.URL = @" ";
+        }*/
+        string[] files, paths;
+        public static List<string> paths2 = new List<string>();
+        public static List<string> files2 = new List<string>();
+        int i = 0;
+        
         private void listBox1_MouseDoubleClick(object sender, MouseEventArgs e)
         {
             int i;
             i = listBox1.SelectedIndex;
-            if(listBox2.SelectedIndex==-1)
-                axWindowsMediaPlayer1.URL = paths[i];
+            axWindowsMediaPlayer1.URL = paths[i];
             label1.Text = String.Format("\n {0}", files[i]);
         }
 
@@ -57,10 +65,15 @@ namespace mp3test
             button2.Visible = true;
         }
 
-        private void button2_Click(object sender, EventArgs e)
+        public void button2_Click(object sender, EventArgs e)
         {
             if (listBox1.SelectedIndex != -1)
+            {
                 listBox2.Items.Add(files[listBox1.SelectedIndex]);
+                paths2.Add(paths[listBox1.SelectedIndex]);
+                files2.Add(files[listBox1.SelectedIndex]);
+            }
+            label2.Text = String.Format("\n {0} added to the queue. It will play next.", files2[listBox2.Items.Count-1]);
             button2.Visible = false;
             button3.Visible = false;
         }
@@ -73,9 +86,65 @@ namespace mp3test
 
         private void button3_Click(object sender, EventArgs e)
         {
-            if (listBox1.SelectedIndex != -1)
+            if (listBox2.SelectedIndex != -1)
+            {
+                //   for(int j=listBox2.Items.Count -1; j>=listBox2.SelectedIndex; j=j-1)
+                paths2.RemoveAt(listBox2.SelectedIndex);
+                files2.RemoveAt(listBox2.SelectedIndex);
                 listBox2.Items.RemoveAt(listBox2.SelectedIndex);
+                
+                    
+            }
             button3.Visible = false;
+        }
+
+
+        private void axWindowsMediaPlayer1_PlayStateChange(object sender, _WMPOCXEvents_PlayStateChangeEvent e)
+        {
+            if(e.newState == 1)
+            {
+                if (listBox2.Items.Count != 0 && listBox2.SelectedIndex !=listBox2.Items.Count-1)
+                {
+                    BeginInvoke(new Action(() =>
+                    {
+                        if (listBox2.SelectedIndex != -1)
+                        {
+                            paths2.RemoveAt(listBox2.SelectedIndex);
+                            files2.RemoveAt(listBox2.SelectedIndex);
+                            listBox2.Items.RemoveAt(listBox2.SelectedIndex);
+                            listBox2.SelectedIndex = listBox2.SelectedIndex + 1;
+                            axWindowsMediaPlayer1.URL = paths2[0];
+                            label1.Text = String.Format("\n {0}", files2[0]);
+                        }
+                        else
+                        {
+                            listBox2.SelectedIndex = listBox2.SelectedIndex + 1;
+                            axWindowsMediaPlayer1.URL = paths2[0];
+                            label1.Text = String.Format("\n {0}", files2[0]);
+                        }
+                    }));
+                }else if(listBox2.SelectedIndex == listBox2.Items.Count - 1 && listBox2.Items.Count!=0)
+                {
+                    BeginInvoke(new Action(() =>
+                    {
+                        paths2.RemoveAt(listBox2.SelectedIndex);
+                        files2.RemoveAt(listBox2.SelectedIndex);
+                        listBox2.Items.RemoveAt(listBox2.SelectedIndex);
+                        listBox1.SelectedIndex = (listBox1.SelectedIndex + 1)%(listBox1.Items.Count);
+                        axWindowsMediaPlayer1.URL = paths[listBox1.SelectedIndex];
+                        label1.Text = String.Format("\n {0}", files[listBox1.SelectedIndex]);
+                    }));
+                }
+                else
+                {
+                    BeginInvoke(new Action(() =>
+                    {
+                        listBox1.SelectedIndex = listBox1.SelectedIndex + 1;
+                        axWindowsMediaPlayer1.URL = paths2[listBox1.SelectedIndex];
+                        label1.Text = String.Format("\n {0}", files2[listBox1.SelectedIndex]);
+                    }));
+                }
+            }
         }
 
         public void button1_Click(object sender, EventArgs e)
@@ -83,6 +152,7 @@ namespace mp3test
             int i;
             if(openFileDialog1.ShowDialog()==System.Windows.Forms.DialogResult.OK)
             {
+                listBox1.Items.Clear();
                 files = openFileDialog1.SafeFileNames;
                 paths = openFileDialog1.FileNames;
                 for(i=0; i<files.Length; i++)
