@@ -73,7 +73,6 @@ namespace mp3test
                 paths2.Add(paths[listBox1.SelectedIndex]);
                 files2.Add(files[listBox1.SelectedIndex]);
             }
-            label2.Text = String.Format("\n {0} added to the queue. It will play next.", files2[listBox2.Items.Count-1]);
             button2.Visible = false;
             button3.Visible = false;
         }
@@ -139,12 +138,48 @@ namespace mp3test
                 {
                     BeginInvoke(new Action(() =>
                     {
-                        listBox1.SelectedIndex = listBox1.SelectedIndex + 1;
-                        axWindowsMediaPlayer1.URL = paths2[listBox1.SelectedIndex];
-                        label1.Text = String.Format("\n {0}", files2[listBox1.SelectedIndex]);
+                        listBox1.SelectedIndex = (listBox1.SelectedIndex + 1)%(listBox1.Items.Count);
+                        if (listBox1.SelectedIndex == -1)
+                        {
+                            listBox1.SelectedIndex = 0;
+                        }
+                        axWindowsMediaPlayer1.URL = paths[listBox1.SelectedIndex];
+                        label1.Text = String.Format("\n {0}", files[listBox1.SelectedIndex]);
                     }));
                 }
             }
+        }
+
+        private void button4_Click(object sender, EventArgs e)
+        {
+            if (listBox2.SelectedIndex == 0)
+            {
+                paths2.RemoveAt(listBox2.SelectedIndex);
+                files2.RemoveAt(listBox2.SelectedIndex);
+                listBox2.Items.RemoveAt(listBox2.SelectedIndex);
+                axWindowsMediaPlayer1.URL = paths[listBox1.SelectedIndex];
+                label1.Text = String.Format("\n {0}", files[listBox1.SelectedIndex]);
+            }
+            else
+            {
+                if (listBox1.SelectedIndex == 0)
+                {
+                    listBox1.SelectedIndex = listBox1.Items.Count - 1;
+                    axWindowsMediaPlayer1.URL = paths[listBox1.SelectedIndex];
+                    label1.Text = String.Format("\n {0}", files[listBox1.SelectedIndex]);
+                }
+                else if(listBox1.SelectedIndex>0)
+                {
+                    listBox1.SelectedIndex = listBox1.SelectedIndex - 1;
+                    axWindowsMediaPlayer1.URL = paths[listBox1.SelectedIndex];
+                    label1.Text = String.Format("\n {0}", files[listBox1.SelectedIndex]);
+                }
+            }
+        }
+
+        private void button5_Click(object sender, EventArgs e)
+        {
+            axWindowsMediaPlayer1.Ctlcontrols.stop();
         }
 
         public void button1_Click(object sender, EventArgs e)
